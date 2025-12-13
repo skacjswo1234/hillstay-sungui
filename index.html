@@ -82,7 +82,7 @@
       background-size: 200% 200%;
       animation: gradientShift 3s ease infinite;
       box-shadow: 0 8px 32px rgba(8, 14, 102, 0.4);
-      margin-top: 180px; /* desktop: 더 아래로 */
+      margin-top: 580px; /* desktop: 더 아래로 */
     }
     .hero-content .btn-primary:hover {
       transform: translateY(-2px) scale(1.05);
@@ -132,7 +132,7 @@
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease, top 0.12s ease, left 0.12s ease;
+      transition: opacity 0.1s ease, transform 0.1s ease, top 0.05s linear, left 0.05s linear;
       backdrop-filter: blur(10px);
       z-index: 3;
     }
@@ -303,23 +303,48 @@
         transform: translateX(-50%) translateY(0);
       }
     }
-    .hero video {
+    .hero img {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
       object-position: 50% 50%;
       background: #000;
-      transform: none;
+      transform: scale(1.1);
       z-index: 0;
+      animation: heroImageZoom 20s ease-out infinite;
+      filter: brightness(1.7);
+      will-change: transform;
+    }
+    @keyframes heroImageZoom {
+      0% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    .hero .pc-only {
+      display: block;
+    }
+    .hero .mob-only {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .hero .pc-only {
+        display: none;
+      }
+      .hero .mob-only {
+        display: block;
+      }
     }
     .hero::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(8, 14, 102, 0.45) 0%, rgba(8, 14, 102, 0.25) 40%, rgba(0, 0, 0, 0.25) 100%);
+      background: linear-gradient(180deg, rgba(8, 14, 102, 0.15) 0%, rgba(8, 14, 102, 0.08) 40%, rgba(0, 0, 0, 0.05) 100%);
       z-index: 1;
     }
     .hero-content {
@@ -344,6 +369,18 @@
     }
     .preview-section {
       padding-bottom: 0;
+    }
+    .intro-video-section {
+      padding: 0;
+      background: #000;
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+    }
+    .intro-video-section video {
+      width: 100%;
+      height: auto;
+      display: block;
     }
     /* Scroll reveal */
     .reveal {
@@ -485,6 +522,9 @@
     footer small {
       color: #505050;
     }
+    footer .footer-logo {
+      height: 48px;
+    }
     @media (max-width: 1024px) {
       .form-card {
         grid-template-columns: 1fr 1fr;
@@ -498,14 +538,24 @@
         height: 40px;
       }
       .hero {
-        min-height: 90vh;
+        min-height: auto;
+        height: 0;
+        padding-bottom: 129.63%; /* 1400/1080 = 1.2963 = 129.63% */
+        position: relative;
         padding: 0;
       }
-      .hero video {
-        object-fit: cover;
-        object-position: 50% 50%;
+      .hero img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center center;
         background: transparent;
-        transform: none;
+        animation: heroImageZoom 20s ease-out infinite;
+        filter: brightness(1.7);
+        will-change: transform;
       }
       .section {
         padding: 64px 16px;
@@ -519,7 +569,7 @@
       .hero-content .btn-primary {
         padding: 14px 28px;
         font-size: 16px;
-        margin-top: 80px;
+        margin-top: 120px;
       }
      
       footer {
@@ -572,7 +622,8 @@
 
   <main>
     <section class="hero">
-      <video id="hero-video" autoplay muted loop playsinline preload="auto"></video>
+      <img class="pc-only" src="./images/pc/h-1.png" alt="Hillstay Hero">
+      <img class="mob-only" src="./images/mob/h-1-m.png" alt="Hillstay Hero">
       <div class="hero-drag-indicator"></div>
       <div class="hero-content">
         <a class="btn-primary" href="#visit-form">방문 예약하기</a>
@@ -581,6 +632,12 @@
         <span class="scroll-text">Scroll</span>
         <div class="scroll-arrow"></div>
       </div>
+    </section>
+
+    <section class="intro-video-section">
+      <video id="intro-video" autoplay muted loop playsinline preload="auto">
+        <source src="./hill-video.mp4" type="video/mp4">
+      </video>
     </section>
 
     <section class="section" id="visit-form">
@@ -738,12 +795,7 @@
 
   <footer>
     <div class="footer-inner">
-      <div>
-        <strong>Hillstay</strong><br>
-        부산광역시 부산진구 부암동 690-8<br>
-        상담문의 1800-5054
-      </div>
-      <small>ⓒ 2025 Hillstay. All rights reserved.</small>
+      <img src="./hillstay-logo.png" alt="Hillstay" class="footer-logo">
     </div>
   </footer>
 
@@ -778,16 +830,20 @@
     const hero = document.querySelector(".hero");
     const dragIndicator = document.querySelector(".hero-drag-indicator");
     let lastPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let rafId = null;
 
     const setDragPos = (x, y) => {
       lastPos = { x, y };
-      dragIndicator.style.setProperty("--drag-x", `${x}px`);
-      dragIndicator.style.setProperty("--drag-y", `${y}px`);
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        dragIndicator.style.setProperty("--drag-x", `${x}px`);
+        dragIndicator.style.setProperty("--drag-y", `${y}px`);
+      });
     };
 
     hero?.addEventListener("mousemove", (e) => {
       setDragPos(e.clientX, e.clientY);
-    });
+    }, { passive: true });
 
     hero?.addEventListener("wheel", (e) => {
       // wheel 이벤트에는 client 좌표가 포함되므로 이를 사용해 위치를 업데이트
@@ -821,33 +877,33 @@
       revealTargets.forEach((el) => el.classList.add("show"));
     }, 1000);
 
-    // 히어로 비디오: 데스크탑/모바일 소스 분기 및 시작 위치 조정
-    const heroVideo = document.getElementById("hero-video");
+    // 소개 영상: 데스크탑/모바일 소스 분기 및 시작 위치 조정
+    const introVideo = document.getElementById("intro-video");
     const desktopVideoSrc = "./hill-video.mp4";
     const mobileVideoSrc = "./hill-video-m.mp4";
 
-    const setHeroVideoSrc = () => {
-      if (!heroVideo) return;
+    const setIntroVideoSrc = () => {
+      if (!introVideo) return;
       const isMobile = window.matchMedia("(max-width: 768px)").matches;
       const target = isMobile ? mobileVideoSrc : desktopVideoSrc;
-      const current = heroVideo.getAttribute("data-current-src");
+      const current = introVideo.getAttribute("data-current-src");
       if (current !== target) {
-        heroVideo.setAttribute("src", target);
-        heroVideo.setAttribute("data-current-src", target);
-        heroVideo.load();
+        introVideo.setAttribute("src", target);
+        introVideo.setAttribute("data-current-src", target);
+        introVideo.load();
       }
-      heroVideo.play().catch(() => {});
+      introVideo.play().catch(() => {});
     };
 
-    heroVideo?.addEventListener("loadedmetadata", () => {
-      if (heroVideo.duration && heroVideo.duration > 2) {
-        heroVideo.currentTime = Math.min(1.5, heroVideo.duration - 0.5);
+    introVideo?.addEventListener("loadedmetadata", () => {
+      if (introVideo.duration && introVideo.duration > 2) {
+        introVideo.currentTime = Math.min(1.5, introVideo.duration - 0.5);
       }
-      heroVideo.play().catch(() => {});
+      introVideo.play().catch(() => {});
     });
 
-    setHeroVideoSrc();
-    const onResizeVideo = () => setHeroVideoSrc();
+    setIntroVideoSrc();
+    const onResizeVideo = () => setIntroVideoSrc();
     window.addEventListener("resize", onResizeVideo);
   </script>
 </body>
