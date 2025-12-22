@@ -377,7 +377,7 @@
       content: "📞";
     }
     .mobile-phone-btn-item.mobile-rep-phone::before {
-      content: "☎️";
+      content: "💬";
     }
     .mobile-top-btn {
       position: fixed;
@@ -438,37 +438,57 @@
     .mobile-header-phone {
       display: none;
       align-items: center;
-      gap: 8px;
-      color: var(--brand);
-      font-weight: 700;
-      font-size: 14px;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 18px;
+      padding: 8px 12px;
+      background: transparent;
     }
     .mobile-header-phone-icon {
-      font-size: 20px;
+      font-size: 28px;
       animation: phoneRing 1.5s ease-in-out infinite;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
     @keyframes phoneRing {
       0%, 100% {
-        transform: rotate(0deg);
+        transform: rotate(0deg) scale(1);
       }
       10%, 30% {
-        transform: rotate(-15deg);
+        transform: rotate(-15deg) scale(1.1);
       }
       20%, 40% {
-        transform: rotate(15deg);
+        transform: rotate(15deg) scale(1.1);
       }
     }
     .mobile-header-phone-number {
-      animation: blink 1.5s ease-in-out infinite;
+      font-weight: 900;
+      font-size: 20px;
+      letter-spacing: 1px;
+      animation: blinkRedYellow 1.2s ease-in-out infinite;
     }
-    @keyframes blink {
+    @keyframes blinkRedYellow {
       0%, 100% {
-        color: var(--brand);
-        opacity: 1;
+        color: #dc2626;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
       50% {
-        color: #2d4ab8;
-        opacity: 0.8;
+        color: #ffeb3b;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+    }
+    body:not(.scrolled) .mobile-header-phone-icon {
+      color: #dc2626;
+      animation: phoneRing 1.5s ease-in-out infinite, flashRed 2s ease-in-out infinite;
+    }
+    body.scrolled .mobile-header-phone-icon {
+      color: #1e40af;
+    }
+    @keyframes flashRed {
+      0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(220, 38, 38, 0.8));
+      }
+      50% {
+        filter: drop-shadow(0 0 16px rgba(220, 38, 38, 1));
       }
     }
     @keyframes scrollBounce {
@@ -880,9 +900,9 @@
         <img src="./hillstay-logo.png" alt="Hillstay 로고 - 프리미엄 주거 공간" class="logo">
       </div>
       <a class="btn-primary" href="#visit-form">방문예약신청</a>
-      <a href="tel:010-9079-4624" class="mobile-header-phone">
+      <a href="tel:1666-9390" class="mobile-header-phone">
         <span class="mobile-header-phone-icon">📞</span>
-        <span class="mobile-header-phone-number">010-9079-4624</span>
+        <span class="mobile-header-phone-number">1666-9390</span>
       </a>
     </div>
   </header>
@@ -1117,8 +1137,8 @@
 
   <!-- Mobile floating buttons -->
   <div class="mobile-phone-btns">
-    <a href="tel:010-9079-4624" class="mobile-phone-btn-item mobile-main-phone" aria-label="전화상담 010-9079-4624"></a>
-    <a href="tel:1666-9390" class="mobile-phone-btn-item mobile-rep-phone" aria-label="대표번호 1666-9390"></a>
+    <a href="tel:010-9079-4624" class="mobile-phone-btn-item mobile-main-phone" aria-label="전화상담 010-9079-4624" title="010-9079-4624"></a>
+    <a href="sms:1666-9390" class="mobile-phone-btn-item mobile-rep-phone" aria-label="문자상담 1666-9390" title="1666-9390"></a>
   </div>
   <button type="button" class="mobile-top-btn" id="mobile-top">▲</button>
   <div class="mobile-bottom-cta">
@@ -1150,9 +1170,11 @@
       if (window.scrollY > 10) {
         header.classList.add("scrolled");
         header.classList.remove("transparent");
+        document.body.classList.add("scrolled");
       } else {
         header.classList.remove("scrolled");
         header.classList.add("transparent");
+        document.body.classList.remove("scrolled");
       }
     };
     document.addEventListener("scroll", onScroll, { passive: true });
