@@ -85,19 +85,51 @@ export async function onRequestPost(context) {
     const solapiUrl = 'https://api.solapi.com/messages/v4/send-many/detail';
     
     // memberId 확인 및 검증
-    const memberId = String(env.SOLAPI_MEMBER_ID || '').trim();
-    console.log('Member ID 확인:', {
-      raw: env.SOLAPI_MEMBER_ID,
+    const memberIdRaw = env.SOLAPI_MEMBER_ID;
+    const memberId = memberIdRaw ? String(memberIdRaw).trim() : '';
+    
+    // 디버깅: memberId 정보를 콘솔과 응답에 포함
+    const memberIdDebug = {
+      raw: memberIdRaw,
+      rawType: typeof memberIdRaw,
       processed: memberId,
       length: memberId.length,
-    });
+      isEmpty: !memberId,
+      is14Chars: memberId.length === 14,
+    };
+    
+    console.log('=== Member ID 디버깅 정보 ===');
+    console.log('Raw 값:', memberIdRaw);
+    console.log('Raw 타입:', typeof memberIdRaw);
+    console.log('처리된 값:', memberId);
+    console.log('길이:', memberId.length);
+    console.log('14자리 여부:', memberId.length === 14);
+    console.log('전체 디버그 객체:', JSON.stringify(memberIdDebug, null, 2));
 
-    if (!memberId || memberId.length !== 14) {
+    // 환경 변수가 없거나 비어있는 경우
+    if (!memberId) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Member ID 환경 변수가 설정되지 않았습니다.',
+          details: `SOLAPI_MEMBER_ID 환경 변수를 확인해주세요. 현재 값: ${memberIdRaw || '(없음)'}`,
+          debug: memberIdDebug
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // 14자리 검증
+    if (memberId.length !== 14) {
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: 'Member ID가 올바르지 않습니다. 14자리 숫자여야 합니다.',
-          details: `Member ID: ${memberId}, 길이: ${memberId.length}`
+          details: `Member ID: "${memberId}", 길이: ${memberId.length}, 필요한 길이: 14`,
+          debug: memberIdDebug
         }),
         { 
           status: 500,
@@ -120,14 +152,13 @@ export async function onRequestPost(context) {
     };
 
     // 요청 본문 로그 (디버깅용)
-    console.log('솔라피 API 요청 본문:', JSON.stringify(solapiBody, null, 2));
-    console.log('솔라피 API 호출 시작:', {
-      url: solapiUrl,
-      memberId: memberId,
-      memberIdLength: memberId.length,
-      to: cleanAdminPhone,
-      from: cleanSender,
-    });
+    console.log('=== 솔라피 API 요청 정보 ===');
+    console.log('URL:', solapiUrl);
+    console.log('Member ID:', memberId);
+    console.log('Member ID 길이:', memberId.length);
+    console.log('수신번호:', cleanAdminPhone);
+    console.log('발신번호:', cleanSender);
+    console.log('요청 본문:', JSON.stringify(solapiBody, null, 2));
 
     // 솔라피 API 호출 (user 형식 인증 사용)
     // 솔라피 API는 user 형식: "user ApiKey:ApiSecret" 형식을 사용합니다
