@@ -81,12 +81,15 @@ export async function onRequestPost(context) {
     const solapiUrl = 'https://api.solapi.com/messages/v4/send';
     
     // 솔라피 API 요청 본문 (v4 형식)
+    // 솔라피 API v4는 messages 배열 형식을 사용합니다
     const solapiBody = {
-      message: {
-        to: cleanAdminPhone,
-        from: cleanSender,
-        text: message,
-      },
+      messages: [
+        {
+          to: cleanAdminPhone,
+          from: cleanSender,
+          text: message,
+        }
+      ],
     };
 
     console.log('솔라피 API 호출 시작:', {
