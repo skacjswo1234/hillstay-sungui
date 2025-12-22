@@ -446,6 +446,44 @@
       min-height: 96px;
       text-align: left;
     }
+    .form-message {
+      margin-bottom: 24px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-weight: 500;
+      text-align: center;
+      animation: slideDown 0.3s ease;
+    }
+    .form-message.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #a5d6a7;
+    }
+    .form-message.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+    }
+    .form-message.loading {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1px solid #90caf9;
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
     .form-actions {
       grid-column: span 2;
       display: flex;
@@ -644,7 +682,8 @@
       <div class="container">
         <h2 class="section-title">방문 상담 예약</h2>
         <p class="section-desc">희망하시는 날짜와 시간을 남겨주시면 전문 상담사가 연락드립니다.</p>
-        <form class="form-card">
+        <div id="form-message" class="form-message" style="display: none;"></div>
+        <form class="form-card" id="visit-form-element">
           <div>
             <label for="name">성함</label>
             <input id="name" type="text" name="name" placeholder="홍길동" required>
@@ -685,7 +724,7 @@
               <input type="checkbox" required>
               개인정보 수집·이용에 동의합니다. (필수)
             </label>
-            <button type="submit" class="btn-primary">예약 신청하기</button>
+            <button type="submit" class="btn-primary" id="submit-btn">예약 신청하기</button>
           </div>
         </form>
       </div>
@@ -959,6 +998,77 @@
     setIntroVideoSrc();
     const onResizeVideo = () => setIntroVideoSrc();
     window.addEventListener("resize", onResizeVideo);
+
+    // 폼 제출 핸들러
+    const visitForm = document.getElementById("visit-form-element");
+    const submitBtn = document.getElementById("submit-btn");
+    const formMessage = document.getElementById("form-message");
+
+    const showMessage = (text, type = "success") => {
+      formMessage.textContent = text;
+      formMessage.className = `form-message ${type}`;
+      formMessage.style.display = "block";
+      
+      // 성공 메시지는 5초 후 자동 숨김
+      if (type === "success") {
+        setTimeout(() => {
+          formMessage.style.display = "none";
+        }, 5000);
+      }
+    };
+
+    const hideMessage = () => {
+      formMessage.style.display = "none";
+    };
+
+    visitForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      // 기존 메시지 숨김
+      hideMessage();
+      
+      // 폼 데이터 수집
+      const formData = new FormData(visitForm);
+      const data = {
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        date: formData.get("date"),
+        time: formData.get("time"),
+        address: formData.get("address") || "",
+        note: formData.get("note") || "",
+      };
+
+      // 버튼 비활성화 및 로딩 상태
+      submitBtn.disabled = true;
+      submitBtn.textContent = "전송 중...";
+      showMessage("예약 신청을 처리하고 있습니다. 잠시만 기다려주세요.", "loading");
+
+      try {
+        const response = await fetch("/api/send-sms", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showMessage(result.message || "예약 신청이 완료되었습니다. 곧 연락드리겠습니다.", "success");
+          visitForm.reset(); // 폼 초기화
+        } else {
+          showMessage(result.error || "예약 신청에 실패했습니다. 다시 시도해주세요.", "error");
+        }
+      } catch (error) {
+        console.error("폼 제출 오류:", error);
+        showMessage("네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.", "error");
+      } finally {
+        // 버튼 활성화 및 원래 텍스트로 복원
+        submitBtn.disabled = false;
+        submitBtn.textContent = "예약 신청하기";
+      }
+    });
   </script>
 </body>
 </html>

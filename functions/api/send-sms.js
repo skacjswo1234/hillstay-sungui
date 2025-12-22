@@ -1,0 +1,137 @@
+/**
+ * Cloudflare Function: 솔라피 SMS 발송 API
+ * 
+ * 환경 변수 필요:
+ * - SOLAPI_API_KEY: 솔라피 API Key
+ * - SOLAPI_API_SECRET: 솔라피 API Secret
+ * - SOLAPI_SENDER: 발신번호 (예: 010-9079-4624)
+ * - ADMIN_PHONE: 관리자 수신번호 (예약 알림 받을 번호)
+ */
+
+export async function onRequestPost(context) {
+  const { request, env } = context;
+
+  // CORS 헤더 설정
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  // OPTIONS 요청 처리 (CORS preflight)
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // 환경 변수 확인
+    if (!env.SOLAPI_API_KEY || !env.SOLAPI_API_SECRET || !env.SOLAPI_SENDER || !env.ADMIN_PHONE) {
+      return new Response(
+        JSON.stringify({ success: false, error: '서버 설정이 완료되지 않았습니다.' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // 요청 데이터 파싱
+    const formData = await request.json();
+    const { name, phone, date, time, address, note } = formData;
+
+    // 필수 필드 검증
+    if (!name || !phone || !date || !time) {
+      return new Response(
+        JSON.stringify({ success: false, error: '필수 항목을 모두 입력해주세요.' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // 전화번호 포맷 정리 (하이픈 제거)
+    const cleanPhone = phone.replace(/[-\s]/g, '');
+    const cleanAdminPhone = env.ADMIN_PHONE.replace(/[-\s]/g, '');
+
+    // 문자 메시지 내용 작성
+    const message = `[Hillstay 방문 예약 신청]
+
+성함: ${name}
+연락처: ${phone}
+방문 날짜: ${date}
+방문 시간: ${time}
+거주 지역: ${address || '미입력'}
+문의사항: ${note || '없음'}
+
+예약 신청이 접수되었습니다.`;
+
+    // 솔라피 API 호출
+    const solapiUrl = 'https://api.solapi.com/messages/v4/send';
+    
+    // Base64 인증 헤더 생성
+    const authString = `${env.SOLAPI_API_KEY}:${env.SOLAPI_API_SECRET}`;
+    const authHeader = btoa(authString);
+
+    // 솔라피 API 요청 본문
+    const solapiBody = {
+      message: {
+        to: cleanAdminPhone,
+        from: env.SOLAPI_SENDER,
+        text: message,
+      },
+    };
+
+    // 솔라피 API 호출
+    const solapiResponse = await fetch(solapiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${authHeader}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(solapiBody),
+    });
+
+    const solapiResult = await solapiResponse.json();
+
+    if (!solapiResponse.ok) {
+      console.error('솔라피 API 오류:', solapiResult);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: '문자 발송에 실패했습니다. 잠시 후 다시 시도해주세요.' 
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    // 성공 응답
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: '예약 신청이 완료되었습니다. 곧 연락드리겠습니다.' 
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+
+  } catch (error) {
+    console.error('서버 오류:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+}
+

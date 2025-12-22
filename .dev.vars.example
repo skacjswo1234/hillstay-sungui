@@ -1,0 +1,9 @@
+# 솔라피 API 설정 예시 파일
+# 이 파일을 복사하여 .dev.vars 파일을 만들고 실제 값을 입력하세요
+# .dev.vars 파일은 .gitignore에 포함되어 Git에 커밋되지 않습니다
+
+SOLAPI_API_KEY=your_api_key_here
+SOLAPI_API_SECRET=your_api_secret_here
+SOLAPI_SENDER=010-9079-4624
+ADMIN_PHONE=01012345678
+
