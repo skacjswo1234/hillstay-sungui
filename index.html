@@ -425,6 +425,51 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+    .mobile-header-phone {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      color: var(--brand);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .mobile-header-phone-icon {
+      font-size: 20px;
+      animation: phoneRing 1.5s ease-in-out infinite;
+    }
+    @keyframes phoneRing {
+      0%, 100% {
+        transform: rotate(0deg);
+      }
+      10%, 30% {
+        transform: rotate(-15deg);
+      }
+      20%, 40% {
+        transform: rotate(15deg);
+      }
+    }
+    .mobile-header-phone-number {
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% {
+        color: var(--brand);
+        opacity: 1;
+      }
+      50% {
+        color: #2d4ab8;
+        opacity: 0.8;
+      }
     }
     @keyframes scrollBounce {
       0%, 100% {
@@ -690,23 +735,47 @@
     }
     footer {
       background: #f3f4f8;
-      padding: 32px 24px;
+      padding: 40px 24px;
       color: #2c2c2c;
     }
     footer .footer-inner {
       max-width: 1200px;
       margin: 0 auto;
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 24px;
       align-items: center;
-    }
-    footer small {
-      color: #505050;
     }
     footer .footer-logo {
       height: 48px;
+      margin-bottom: 8px;
+    }
+    footer .footer-info {
+      width: 100%;
+      text-align: center;
+      line-height: 1.8;
+      font-size: 13px;
+      color: #4a4a4a;
+    }
+    footer .footer-info p {
+      margin: 8px 0;
+    }
+    footer .footer-info strong {
+      color: #2c2c2c;
+      font-weight: 600;
+    }
+    footer .footer-info a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+    footer .footer-info a:hover {
+      text-decoration: underline;
+    }
+    footer small {
+      color: #707070;
+      font-size: 12px;
+      display: block;
+      margin-top: 16px;
     }
     @media (max-width: 1024px) {
       .form-card {
@@ -716,6 +785,12 @@
     @media (max-width: 768px) {
       .header-bar {
         padding: 12px 16px;
+      }
+      .header-bar .btn-primary {
+        display: none;
+      }
+      .mobile-header-phone {
+        display: flex;
       }
       .logo {
         height: 40px;
@@ -774,7 +849,11 @@
       footer .footer-inner {
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 20px;
+      }
+      footer .footer-info {
+        font-size: 12px;
+        line-height: 1.6;
       }
       .form-card {
         grid-template-columns: 1fr;
@@ -801,6 +880,10 @@
         <img src="./hillstay-logo.png" alt="Hillstay 로고 - 프리미엄 주거 공간" class="logo">
       </div>
       <a class="btn-primary" href="#visit-form">방문예약신청</a>
+      <a href="tel:010-9079-4624" class="mobile-header-phone">
+        <span class="mobile-header-phone-icon">📞</span>
+        <span class="mobile-header-phone-number">010-9079-4624</span>
+      </a>
     </div>
   </header>
 
@@ -1039,13 +1122,25 @@
   </div>
   <button type="button" class="mobile-top-btn" id="mobile-top">▲</button>
   <div class="mobile-bottom-cta">
-    <a href="#visit-form">1:1 상담신청하기</a>
+    <a href="tel:010-9079-4624">📞 전화상담</a>
+    <a href="#visit-form">📅 방문예약</a>
   </div>
 
   <footer>
-      <div class="footer-inner">
-        <img src="./hillstay-logo.png" alt="Hillstay 로고" class="footer-logo">
+    <div class="footer-inner">
+      <img src="./hillstay-logo.png" alt="Hillstay 로고" class="footer-logo">
+      <div class="footer-info">
+        <p><strong>상호</strong> : (주)숭의역힐스테이트 분양홍보관 | <strong>대표자</strong> : 김지나</p>
+        <p><strong>주소</strong> : 인천광역시 미추홀구 숭의동 362-19 번지 일원</p>
+        <p><strong>사업자등록번호</strong> : 394-58-00643 | <strong>통신판매업신고</strong> : 제 2024-인천미추홀-103호</p>
+        <p>
+          <strong>TEL</strong> : <a href="tel:1666-9390">1666-9390</a> | 
+          <strong>FAX</strong> : 02-452-7467 | 
+          <strong>E-mail</strong> : <a href="mailto:info@hillstate-sungui.co.kr">info@hillstate-sungui.co.kr</a>
+        </p>
+        <small>COPYRIGHT © 2025 HEALSTATE SUNGUI. ALL RIGHTS RESERVED.</small>
       </div>
+    </div>
   </footer>
 
   <script>
