@@ -80,11 +80,6 @@ export async function onRequestPost(context) {
     // 솔라피 API 호출
     const solapiUrl = 'https://api.solapi.com/messages/v4/send';
     
-    // Base64 인증 헤더 생성
-    const authString = `${env.SOLAPI_API_KEY}:${env.SOLAPI_API_SECRET}`;
-    // Cloudflare Workers/Functions에서 btoa 사용
-    const authHeader = btoa(authString);
-
     // 솔라피 API 요청 본문 (v4 형식)
     const solapiBody = {
       message: {
@@ -100,11 +95,12 @@ export async function onRequestPost(context) {
       from: cleanSender,
     });
 
-    // 솔라피 API 호출
+    // 솔라피 API 호출 (user 형식 인증 사용)
+    // 솔라피 API는 user 형식: "user ApiKey:ApiSecret" 형식을 사용합니다
     const solapiResponse = await fetch(solapiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${authHeader}`,
+        'Authorization': `user ${env.SOLAPI_API_KEY}:${env.SOLAPI_API_SECRET}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(solapiBody),
