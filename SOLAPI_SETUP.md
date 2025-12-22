@@ -7,13 +7,6 @@
 2. **설정** > **API 인증키 관리** 메뉴로 이동
 3. **API Key**와 **API Secret** 확인 (또는 새로 생성)
 
-### Member ID 확인
-1. 솔라피 대시보드에 로그인
-2. **설정** > **계정 정보** 또는 **내 정보** 메뉴로 이동
-3. **Member ID** 확인 (14자리 숫자)
-   - 예: `12345678901234`
-   - Member ID는 솔라피 계정의 고유 식별자입니다
-
 #### ⚠️ 중요: IP 제한 설정
 **Cloudflare Pages Functions를 사용하는 경우 IP 제한을 설정하지 마세요!**
 
@@ -38,12 +31,9 @@
 ```
 SOLAPI_API_KEY = [솔라피 API Key]
 SOLAPI_API_SECRET = [솔라피 API Secret]
-SOLAPI_MEMBER_ID = [솔라피 Member ID, 14자리 숫자]
 SOLAPI_SENDER = 010-9079-4624
 ADMIN_PHONE = 010-7539-0242  (또는 원하는 수신번호)
 ```
-
-**중요:** `SOLAPI_MEMBER_ID`는 솔라피 대시보드에서 확인한 14자리 숫자입니다.
 
 **참고:**
 - `SOLAPI_SENDER`: 발신번호 (등록된 번호, 고객이 보는 번호)
@@ -57,7 +47,6 @@ ADMIN_PHONE = 010-7539-0242  (또는 원하는 수신번호)
 ```
 SOLAPI_API_KEY=your_api_key_here
 SOLAPI_API_SECRET=your_api_secret_here
-SOLAPI_MEMBER_ID=12345678901234
 SOLAPI_SENDER=010-9079-4624
 ADMIN_PHONE=01012345678
 ```

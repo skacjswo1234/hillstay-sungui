@@ -4,10 +4,64 @@
  * 환경 변수 필요:
  * - SOLAPI_API_KEY: 솔라피 API Key
  * - SOLAPI_API_SECRET: 솔라피 API Secret
- * - SOLAPI_MEMBER_ID: 솔라피 Member ID (14자리 숫자)
  * - SOLAPI_SENDER: 발신번호 (예: 010-9079-4624)
  * - ADMIN_PHONE: 관리자 수신번호 (예약 알림 받을 번호)
  */
+
+/**
+ * HMAC-SHA256 시그니처 생성
+ * @param {string} apiSecret - API Secret Key
+ * @param {string} dateTime - ISO 8601 형식의 날짜/시간
+ * @param {string} salt - 랜덤 salt 값
+ * @returns {Promise<string>} - 생성된 signature (hex 형식)
+ */
+async function generateSignature(apiSecret, dateTime, salt) {
+  const data = dateTime + salt;
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(apiSecret);
+  const messageData = encoder.encode(data);
+  
+  // HMAC-SHA256 생성
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+  
+  // ArrayBuffer를 hex 문자열로 변환
+  const hashArray = Array.from(new Uint8Array(signature));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  return hashHex;
+}
+
+/**
+ * 랜덤 salt 생성 (16바이트 hex)
+ * @returns {string} - 랜덤 salt 값
+ */
+function generateSalt() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * 솔라피 API 인증 헤더 생성
+ * @param {string} apiKey - API Key
+ * @param {string} apiSecret - API Secret
+ * @returns {Promise<string>} - Authorization 헤더 값
+ */
+async function createAuthHeader(apiKey, apiSecret) {
+  const dateTime = new Date().toISOString();
+  const salt = generateSalt();
+  const signature = await generateSignature(apiSecret, dateTime, salt);
+  
+  return `HMAC-SHA256 apiKey=${apiKey}, date=${dateTime}, salt=${salt}, signature=${signature}`;
+}
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -25,11 +79,10 @@ export async function onRequestPost(context) {
   }
 
   try {
-    // 환경 변수 확인 (디버깅용)
+    // 환경 변수 확인
     const missingVars = [];
     if (!env.SOLAPI_API_KEY) missingVars.push('SOLAPI_API_KEY');
     if (!env.SOLAPI_API_SECRET) missingVars.push('SOLAPI_API_SECRET');
-    if (!env.SOLAPI_MEMBER_ID) missingVars.push('SOLAPI_MEMBER_ID');
     if (!env.SOLAPI_SENDER) missingVars.push('SOLAPI_SENDER');
     if (!env.ADMIN_PHONE) missingVars.push('ADMIN_PHONE');
     
@@ -79,127 +132,35 @@ export async function onRequestPost(context) {
 
 예약 신청이 접수되었습니다.`;
 
-    // 솔라피 API 호출
-    // 단일 메시지 발송: /messages/v4/send
-    // 여러 메시지 발송: /messages/v4/send-many/detail
+    // 솔라피 API 엔드포인트
     const solapiUrl = 'https://api.solapi.com/messages/v4/send-many/detail';
     
-    // memberId 확인 및 검증
-    const memberIdRaw = env.SOLAPI_MEMBER_ID;
-    const memberId = memberIdRaw ? String(memberIdRaw).trim() : '';
-    
-    // 디버깅: memberId 정보를 콘솔과 응답에 포함
-    const memberIdDebug = {
-      raw: memberIdRaw,
-      rawType: typeof memberIdRaw,
-      processed: memberId,
-      length: memberId.length,
-      isEmpty: !memberId,
-      is14Chars: memberId.length === 14,
-    };
-    
-    console.log('=== Member ID 디버깅 정보 ===');
-    console.log('Raw 값:', memberIdRaw);
-    console.log('Raw 타입:', typeof memberIdRaw);
-    console.log('처리된 값:', memberId);
-    console.log('길이:', memberId.length);
-    console.log('14자리 여부:', memberId.length === 14);
-    console.log('전체 디버그 객체:', JSON.stringify(memberIdDebug, null, 2));
-
-    // 환경 변수가 없거나 비어있는 경우
-    if (!memberId) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Member ID 환경 변수가 설정되지 않았습니다.',
-          details: `SOLAPI_MEMBER_ID 환경 변수를 확인해주세요. 현재 값: ${memberIdRaw || '(없음)'}`,
-          debug: memberIdDebug
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // 14자리 검증
-    if (memberId.length !== 14) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Member ID가 올바르지 않습니다. 14자리 숫자여야 합니다.',
-          details: `Member ID: "${memberId}", 길이: ${memberId.length}, 필요한 길이: 14`,
-          debug: memberIdDebug
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // 솔라피 API 요청 본문 (v4 형식)
-    // 솔라피 API v4는 messages 배열 형식을 사용하며, memberId는 각 메시지 객체 안에 포함되어야 합니다
-    // 솔라피 API는 memberId를 숫자 타입으로 요구할 수 있으므로 숫자로 변환
-    const memberIdNum = parseInt(memberId, 10);
-    
-    // 숫자 변환 검증
-    if (isNaN(memberIdNum) || String(memberIdNum).length !== 14) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Member ID를 숫자로 변환할 수 없습니다.',
-          details: `Member ID: "${memberId}", 변환된 값: ${memberIdNum}`,
-          debug: memberIdDebug
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-    
     // 솔라피 API 요청 본문
-    // memberId는 선택 사항일 수 있음 (API Key로 계정 식별 가능)
-    // 하지만 솔라피 API가 요구하는 경우를 위해 두 가지 형식 모두 시도
     const solapiBody = {
       messages: [
         {
           to: cleanAdminPhone,
           from: cleanSender,
           text: message,
-          // memberId를 문자열로 시도 (솔라피 API가 문자열을 요구할 수 있음)
-          memberId: memberId, // 원본 문자열 사용
         }
       ],
     };
     
-    // memberId를 최상위 레벨에도 추가 (일부 API 형식에서 필요할 수 있음)
-    // solapiBody.memberId = memberId;
-    
-    // 요청 본문 검증 로그
-    console.log('=== 요청 본문 검증 ===');
-    console.log('memberId 원본 (문자열):', memberId);
-    console.log('memberId 변환 (숫자):', memberIdNum);
-    console.log('memberId 타입:', typeof solapiBody.messages[0].memberId);
-    console.log('memberId 길이:', String(solapiBody.messages[0].memberId).length);
-    console.log('전체 요청 본문:', JSON.stringify(solapiBody, null, 2));
-
-    // 요청 본문 로그 (디버깅용)
     console.log('=== 솔라피 API 요청 정보 ===');
     console.log('URL:', solapiUrl);
-    console.log('Member ID:', memberId);
-    console.log('Member ID 길이:', memberId.length);
     console.log('수신번호:', cleanAdminPhone);
     console.log('발신번호:', cleanSender);
     console.log('요청 본문:', JSON.stringify(solapiBody, null, 2));
 
-    // 솔라피 API 호출 (user 형식 인증 사용)
-    // 솔라피 API는 user 형식: "user ApiKey:ApiSecret" 형식을 사용합니다
+    // HMAC-SHA256 인증 헤더 생성
+    const authHeader = await createAuthHeader(env.SOLAPI_API_KEY, env.SOLAPI_API_SECRET);
+    console.log('인증 헤더 생성 완료');
+
+    // 솔라피 API 호출
     const solapiResponse = await fetch(solapiUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `user ${env.SOLAPI_API_KEY}:${env.SOLAPI_API_SECRET}`,
+        'Authorization': authHeader,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(solapiBody),
@@ -219,10 +180,8 @@ export async function onRequestPost(context) {
         JSON.stringify({ 
           success: false, 
           error: '문자 발송에 실패했습니다. 잠시 후 다시 시도해주세요.',
-          details: solapiResult.error?.message || JSON.stringify(solapiResult),
+          details: solapiResult.errorMessage || JSON.stringify(solapiResult),
           debug: {
-            memberId: memberId,
-            memberIdLength: memberId.length,
             requestBody: solapiBody,
             solapiError: solapiResult
           }
