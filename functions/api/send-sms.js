@@ -4,6 +4,7 @@
  * 환경 변수 필요:
  * - SOLAPI_API_KEY: 솔라피 API Key
  * - SOLAPI_API_SECRET: 솔라피 API Secret
+ * - SOLAPI_MEMBER_ID: 솔라피 Member ID (14자리 숫자)
  * - SOLAPI_SENDER: 발신번호 (예: 010-9079-4624)
  * - ADMIN_PHONE: 관리자 수신번호 (예약 알림 받을 번호)
  */
@@ -28,6 +29,7 @@ export async function onRequestPost(context) {
     const missingVars = [];
     if (!env.SOLAPI_API_KEY) missingVars.push('SOLAPI_API_KEY');
     if (!env.SOLAPI_API_SECRET) missingVars.push('SOLAPI_API_SECRET');
+    if (!env.SOLAPI_MEMBER_ID) missingVars.push('SOLAPI_MEMBER_ID');
     if (!env.SOLAPI_SENDER) missingVars.push('SOLAPI_SENDER');
     if (!env.ADMIN_PHONE) missingVars.push('ADMIN_PHONE');
     
@@ -81,8 +83,9 @@ export async function onRequestPost(context) {
     const solapiUrl = 'https://api.solapi.com/messages/v4/send';
     
     // 솔라피 API 요청 본문 (v4 형식)
-    // 솔라피 API v4는 messages 배열 형식을 사용합니다
+    // memberId는 솔라피 계정의 고유 ID (14자리 숫자)
     const solapiBody = {
+      memberId: env.SOLAPI_MEMBER_ID,
       messages: [
         {
           to: cleanAdminPhone,
