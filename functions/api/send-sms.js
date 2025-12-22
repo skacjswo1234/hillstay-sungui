@@ -159,16 +159,23 @@ export async function onRequestPost(context) {
       );
     }
     
+    // 솔라피 API 요청 본문
+    // memberId는 선택 사항일 수 있음 (API Key로 계정 식별 가능)
+    // 하지만 솔라피 API가 요구하는 경우를 위해 두 가지 형식 모두 시도
     const solapiBody = {
       messages: [
         {
           to: cleanAdminPhone,
           from: cleanSender,
           text: message,
-          memberId: memberIdNum, // 숫자 타입으로 전송
+          // memberId를 문자열로 시도 (솔라피 API가 문자열을 요구할 수 있음)
+          memberId: memberId, // 원본 문자열 사용
         }
       ],
     };
+    
+    // memberId를 최상위 레벨에도 추가 (일부 API 형식에서 필요할 수 있음)
+    // solapiBody.memberId = memberId;
     
     // 요청 본문 검증 로그
     console.log('=== 요청 본문 검증 ===');
