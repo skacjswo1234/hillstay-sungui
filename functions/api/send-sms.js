@@ -105,7 +105,8 @@ export async function onRequestPost(context) {
     }
 
     // 솔라피 API 요청 본문 (v4 형식)
-    // memberId는 솔라피 계정의 고유 ID (14자리 숫자, 문자열로 전달)
+    // memberId는 각 메시지 객체 안에 포함되거나 최상위 레벨에 있어야 함
+    // 두 가지 형식 모두 시도
     const solapiBody = {
       memberId: memberId,
       messages: [
@@ -113,16 +114,19 @@ export async function onRequestPost(context) {
           to: cleanAdminPhone,
           from: cleanSender,
           text: message,
+          memberId: memberId, // 각 메시지에도 memberId 포함
         }
       ],
     };
 
+    // 요청 본문 로그 (디버깅용)
+    console.log('솔라피 API 요청 본문:', JSON.stringify(solapiBody, null, 2));
     console.log('솔라피 API 호출 시작:', {
       url: solapiUrl,
       memberId: memberId,
+      memberIdLength: memberId.length,
       to: cleanAdminPhone,
       from: cleanSender,
-      body: JSON.stringify(solapiBody),
     });
 
     // 솔라피 API 호출 (user 형식 인증 사용)
