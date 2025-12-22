@@ -82,10 +82,32 @@ export async function onRequestPost(context) {
     // 솔라피 API 호출
     const solapiUrl = 'https://api.solapi.com/messages/v4/send';
     
+    // memberId 확인 및 검증
+    const memberId = String(env.SOLAPI_MEMBER_ID || '').trim();
+    console.log('Member ID 확인:', {
+      raw: env.SOLAPI_MEMBER_ID,
+      processed: memberId,
+      length: memberId.length,
+    });
+
+    if (!memberId || memberId.length !== 14) {
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Member ID가 올바르지 않습니다. 14자리 숫자여야 합니다.',
+          details: `Member ID: ${memberId}, 길이: ${memberId.length}`
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     // 솔라피 API 요청 본문 (v4 형식)
-    // memberId는 솔라피 계정의 고유 ID (14자리 숫자)
+    // memberId는 솔라피 계정의 고유 ID (14자리 숫자, 문자열로 전달)
     const solapiBody = {
-      memberId: env.SOLAPI_MEMBER_ID,
+      memberId: memberId,
       messages: [
         {
           to: cleanAdminPhone,
@@ -97,8 +119,10 @@ export async function onRequestPost(context) {
 
     console.log('솔라피 API 호출 시작:', {
       url: solapiUrl,
+      memberId: memberId,
       to: cleanAdminPhone,
       from: cleanSender,
+      body: JSON.stringify(solapiBody),
     });
 
     // 솔라피 API 호출 (user 형식 인증 사용)
