@@ -341,6 +341,44 @@
     }
 
     /* Mobile-only controls */
+    .mobile-phone-btns {
+      position: fixed;
+      right: 16px;
+      bottom: 150px;
+      z-index: 95;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .mobile-phone-btn-item {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .mobile-phone-btn-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(8, 14, 102, 0.3);
+    }
+    .mobile-phone-btn-item::before {
+      font-size: 20px;
+    }
+    .mobile-phone-btn-item.mobile-main-phone::before {
+      content: "📞";
+    }
+    .mobile-phone-btn-item.mobile-rep-phone::before {
+      content: "☎️";
+    }
     .mobile-top-btn {
       position: fixed;
       right: 16px;
@@ -369,10 +407,11 @@
       background: rgba(255, 255, 255, 0.92);
       box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.08);
       padding: 10px 14px;
+      gap: 8px;
+      flex-direction: row;
     }
     .mobile-bottom-cta a {
-      display: block;
-      width: 100%;
+      flex: 1;
       background: var(--brand);
       color: #fff;
       border: none;
@@ -382,6 +421,10 @@
       text-align: center;
       text-decoration: none;
       box-shadow: 0 8px 24px rgba(8, 14, 102, 0.26);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
     @keyframes scrollBounce {
       0%, 100% {
@@ -715,12 +758,13 @@
       footer {
         padding-bottom: 120px; /* 여백 최소화 */
       }
+      .mobile-phone-btns {
+        display: flex;
+      }
       .mobile-top-btn,
       .mobile-bottom-cta {
         display: flex;
-      }
-      .mobile-bottom-cta {
-        display: block;
+        flex-direction: row;
       }
       footer {
         padding-top: 12px;
@@ -974,9 +1018,13 @@
       <span class="quick-icon">R</span>
       <span>방문예약</span>
     </a>
-    <a class="quick-btn" href="tel:1666-9390">
+    <a class="quick-btn" href="tel:010-9079-4624">
       <span class="quick-icon">C</span>
       <span>전화상담</span>
+    </a>
+    <a class="quick-btn" href="tel:1666-9390">
+      <span class="quick-icon">T</span>
+      <span>대표번호</span>
     </a>
     <button type="button" class="quick-btn" id="quick-top">
       <span class="quick-icon">▲</span>
@@ -985,6 +1033,10 @@
   </div>
 
   <!-- Mobile floating buttons -->
+  <div class="mobile-phone-btns">
+    <a href="tel:010-9079-4624" class="mobile-phone-btn-item mobile-main-phone" aria-label="전화상담 010-9079-4624"></a>
+    <a href="tel:1666-9390" class="mobile-phone-btn-item mobile-rep-phone" aria-label="대표번호 1666-9390"></a>
+  </div>
   <button type="button" class="mobile-top-btn" id="mobile-top">▲</button>
   <div class="mobile-bottom-cta">
     <a href="#visit-form">1:1 상담신청하기</a>
