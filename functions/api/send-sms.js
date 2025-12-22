@@ -53,6 +53,7 @@ export async function onRequestPost(context) {
     // 전화번호 포맷 정리 (하이픈 제거)
     const cleanPhone = phone.replace(/[-\s]/g, '');
     const cleanAdminPhone = env.ADMIN_PHONE.replace(/[-\s]/g, '');
+    const cleanSender = env.SOLAPI_SENDER.replace(/[-\s]/g, '');
 
     // 문자 메시지 내용 작성
     const message = `[Hillstay 방문 예약 신청]
@@ -71,16 +72,23 @@ export async function onRequestPost(context) {
     
     // Base64 인증 헤더 생성
     const authString = `${env.SOLAPI_API_KEY}:${env.SOLAPI_API_SECRET}`;
+    // Cloudflare Workers/Functions에서 btoa 사용
     const authHeader = btoa(authString);
 
-    // 솔라피 API 요청 본문
+    // 솔라피 API 요청 본문 (v4 형식)
     const solapiBody = {
       message: {
         to: cleanAdminPhone,
-        from: env.SOLAPI_SENDER,
+        from: cleanSender,
         text: message,
       },
     };
+
+    console.log('솔라피 API 호출 시작:', {
+      url: solapiUrl,
+      to: cleanAdminPhone,
+      from: cleanSender,
+    });
 
     // 솔라피 API 호출
     const solapiResponse = await fetch(solapiUrl, {
@@ -93,13 +101,19 @@ export async function onRequestPost(context) {
     });
 
     const solapiResult = await solapiResponse.json();
+    console.log('솔라피 API 응답:', {
+      status: solapiResponse.status,
+      ok: solapiResponse.ok,
+      result: solapiResult,
+    });
 
     if (!solapiResponse.ok) {
       console.error('솔라피 API 오류:', solapiResult);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: '문자 발송에 실패했습니다. 잠시 후 다시 시도해주세요.' 
+          error: '문자 발송에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          details: solapiResult.error?.message || JSON.stringify(solapiResult)
         }),
         { 
           status: 500,
@@ -122,10 +136,12 @@ export async function onRequestPost(context) {
 
   } catch (error) {
     console.error('서버 오류:', error);
+    console.error('에러 스택:', error.stack);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' 
+        error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        details: error.message 
       }),
       { 
         status: 500,
