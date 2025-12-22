@@ -80,7 +80,9 @@ export async function onRequestPost(context) {
 예약 신청이 접수되었습니다.`;
 
     // 솔라피 API 호출
-    const solapiUrl = 'https://api.solapi.com/messages/v4/send';
+    // 단일 메시지 발송: /messages/v4/send
+    // 여러 메시지 발송: /messages/v4/send-many/detail
+    const solapiUrl = 'https://api.solapi.com/messages/v4/send-many/detail';
     
     // memberId 확인 및 검증
     const memberId = String(env.SOLAPI_MEMBER_ID || '').trim();
@@ -105,16 +107,14 @@ export async function onRequestPost(context) {
     }
 
     // 솔라피 API 요청 본문 (v4 형식)
-    // memberId는 각 메시지 객체 안에 포함되거나 최상위 레벨에 있어야 함
-    // 두 가지 형식 모두 시도
+    // 솔라피 API v4는 messages 배열 형식을 사용하며, memberId는 각 메시지 객체 안에 포함되어야 합니다
     const solapiBody = {
-      memberId: memberId,
       messages: [
         {
           to: cleanAdminPhone,
           from: cleanSender,
           text: message,
-          memberId: memberId, // 각 메시지에도 memberId 포함
+          memberId: memberId, // 각 메시지 객체 안에 memberId 포함 (14자리 숫자)
         }
       ],
     };
