@@ -180,11 +180,18 @@ export async function onRequestPost(context) {
 
     if (!solapiResponse.ok) {
       console.error('솔라피 API 오류:', solapiResult);
+      console.error('요청 본문:', JSON.stringify(solapiBody, null, 2));
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: '문자 발송에 실패했습니다. 잠시 후 다시 시도해주세요.',
-          details: solapiResult.error?.message || JSON.stringify(solapiResult)
+          details: solapiResult.error?.message || JSON.stringify(solapiResult),
+          debug: {
+            memberId: memberId,
+            memberIdLength: memberId.length,
+            requestBody: solapiBody,
+            solapiError: solapiResult
+          }
         }),
         { 
           status: 500,

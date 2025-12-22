@@ -1053,7 +1053,12 @@
         });
 
         const result = await response.json();
-        console.log("서버 응답:", result); // 디버깅용
+        console.log("=== 서버 응답 ===", result); // 디버깅용
+        if (result.debug) {
+          console.log("=== 디버그 정보 ===", result.debug);
+          console.log("Member ID:", result.debug.memberId);
+          console.log("Member ID 길이:", result.debug.memberIdLength);
+        }
 
         if (result.success) {
           showMessage(result.message || "예약 신청이 완료되었습니다. 곧 연락드리겠습니다.", "success");
