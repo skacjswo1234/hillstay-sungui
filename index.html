@@ -1053,12 +1053,22 @@
         });
 
         const result = await response.json();
+        console.log("서버 응답:", result); // 디버깅용
 
         if (result.success) {
           showMessage(result.message || "예약 신청이 완료되었습니다. 곧 연락드리겠습니다.", "success");
           visitForm.reset(); // 폼 초기화
         } else {
-          showMessage(result.error || "예약 신청에 실패했습니다. 다시 시도해주세요.", "error");
+          // 상세 에러 메시지 표시
+          let errorMsg = result.error || "예약 신청에 실패했습니다. 다시 시도해주세요.";
+          if (result.details) {
+            console.error("에러 상세:", result.details);
+            errorMsg += ` (${result.details})`;
+          }
+          if (result.missing) {
+            errorMsg += ` [누락된 환경 변수: ${result.missing.join(", ")}]`;
+          }
+          showMessage(errorMsg, "error");
         }
       } catch (error) {
         console.error("폼 제출 오류:", error);

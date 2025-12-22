@@ -24,10 +24,20 @@ export async function onRequestPost(context) {
   }
 
   try {
-    // 환경 변수 확인
-    if (!env.SOLAPI_API_KEY || !env.SOLAPI_API_SECRET || !env.SOLAPI_SENDER || !env.ADMIN_PHONE) {
+    // 환경 변수 확인 (디버깅용)
+    const missingVars = [];
+    if (!env.SOLAPI_API_KEY) missingVars.push('SOLAPI_API_KEY');
+    if (!env.SOLAPI_API_SECRET) missingVars.push('SOLAPI_API_SECRET');
+    if (!env.SOLAPI_SENDER) missingVars.push('SOLAPI_SENDER');
+    if (!env.ADMIN_PHONE) missingVars.push('ADMIN_PHONE');
+    
+    if (missingVars.length > 0) {
       return new Response(
-        JSON.stringify({ success: false, error: '서버 설정이 완료되지 않았습니다.' }),
+        JSON.stringify({ 
+          success: false, 
+          error: '서버 설정이 완료되지 않았습니다.',
+          missing: missingVars
+        }),
         { 
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
