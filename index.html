@@ -1058,6 +1058,12 @@
           console.log("=== 디버그 정보 ===", result.debug);
           console.log("Member ID:", result.debug.memberId);
           console.log("Member ID 길이:", result.debug.memberIdLength);
+          if (result.debug.requestBody) {
+            console.log("=== 솔라피 API 요청 본문 ===", JSON.stringify(result.debug.requestBody, null, 2));
+          }
+          if (result.debug.solapiError) {
+            console.log("=== 솔라피 API 오류 ===", result.debug.solapiError);
+          }
         }
 
         if (result.success) {

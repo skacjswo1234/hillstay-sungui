@@ -140,16 +140,26 @@ export async function onRequestPost(context) {
 
     // 솔라피 API 요청 본문 (v4 형식)
     // 솔라피 API v4는 messages 배열 형식을 사용하며, memberId는 각 메시지 객체 안에 포함되어야 합니다
+    // memberId를 숫자로 변환 시도 (문자열이어도 API가 숫자로 인식할 수 있음)
+    const memberIdNum = memberId; // 문자열 그대로 사용 (솔라피 API는 문자열도 받음)
+    
     const solapiBody = {
       messages: [
         {
           to: cleanAdminPhone,
           from: cleanSender,
           text: message,
-          memberId: memberId, // 각 메시지 객체 안에 memberId 포함 (14자리 숫자)
+          memberId: memberIdNum, // 각 메시지 객체 안에 memberId 포함 (14자리)
         }
       ],
     };
+    
+    // 요청 본문 검증 로그
+    console.log('=== 요청 본문 검증 ===');
+    console.log('memberId 타입:', typeof solapiBody.messages[0].memberId);
+    console.log('memberId 값:', solapiBody.messages[0].memberId);
+    console.log('memberId 길이:', String(solapiBody.messages[0].memberId).length);
+    console.log('전체 요청 본문:', JSON.stringify(solapiBody, null, 2));
 
     // 요청 본문 로그 (디버깅용)
     console.log('=== 솔라피 API 요청 정보 ===');
