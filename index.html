@@ -435,6 +435,16 @@
         transform: scale(1.05);
       }
     }
+    .header-phone {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 18px;
+      padding: 8px 12px;
+      background: transparent;
+      text-decoration: none;
+    }
     .mobile-header-phone {
       display: none;
       align-items: center;
@@ -444,6 +454,7 @@
       padding: 8px 12px;
       background: transparent;
     }
+    .header-phone-icon,
     .mobile-header-phone-icon {
       font-size: 28px;
       color: #dc2626;
@@ -461,11 +472,27 @@
         transform: rotate(15deg) scale(1.1);
       }
     }
+    .header-phone-number {
+      font-weight: 900;
+      font-size: 26px;
+      letter-spacing: 1px;
+      animation: blinkRedYellow 2.5s ease-in-out infinite;
+    }
     .mobile-header-phone-number {
       font-weight: 900;
       font-size: 26px;
       letter-spacing: 1px;
       animation: blinkRedNavy 2.5s ease-in-out infinite;
+    }
+    @keyframes blinkRedYellow {
+      0%, 100% {
+        color: #dc2626;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      50% {
+        color: #fbbf24;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
     }
     @keyframes blinkRedNavy {
       0%, 100% {
@@ -815,8 +842,20 @@
       .header-bar .btn-primary {
         display: none;
       }
+      .header-phone {
+        display: none;
+      }
       .mobile-header-phone {
         display: flex;
+        font-size: 16px;
+        padding: 6px 10px;
+        gap: 8px;
+      }
+      .mobile-header-phone-icon {
+        font-size: 24px;
+      }
+      .mobile-header-phone-number {
+        font-size: 22px;
       }
       .logo {
         height: 40px;
@@ -906,7 +945,10 @@
       <div class="logo-wrap">
         <img src="./hillstay-logo.png" alt="Hillstay 로고 - 프리미엄 주거 공간" class="logo">
       </div>
-      <a class="btn-primary" href="#visit-form">방문예약신청</a>
+      <a href="tel:1666-9390" class="header-phone">
+        <span class="header-phone-icon">📞</span>
+        <span class="header-phone-number">1666-9390</span>
+      </a>
       <a href="tel:1666-9390" class="mobile-header-phone">
         <span class="mobile-header-phone-icon">📞</span>
         <span class="mobile-header-phone-number">1666-9390</span>
@@ -969,7 +1011,7 @@
           </div>
           <div>
             <label for="address">거주 지역</label>
-            <input id="address" type="text" name="address" placeholder="예: 부산진구">
+            <input id="address" type="text" name="address" placeholder="예: 인천 숭의동">
           </div>
           <div>
             <label for="note">문의사항</label>
